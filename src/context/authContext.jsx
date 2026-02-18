@@ -1,13 +1,21 @@
-import { createContext, useState, useEffect, useContext } from 'react';
+import { createContext, useState, useEffect, useContext, useCallback  } from 'react';
 import { authService } from '../api/authService';
 import { STORAGE_KEYS } from '../utils/constants';
 
+/* eslint-disable react-refresh/only-export-components */
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const logout = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEYS.TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.USER);
+    setUser(null);
+    setIsAuthenticated(false);
+  }, []); 
 
   // Verificar si hay sesión al cargar la app
   useEffect(() => {
@@ -21,7 +29,7 @@ export const AuthProvider = ({ children }) => {
           await authService.verifyToken();
           setUser(JSON.parse(savedUser));
           setIsAuthenticated(true);
-        } catch (error) {
+        } catch {
           // Token inválido, limpiar
           logout();
         }
@@ -30,7 +38,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     initAuth();
-  }, []);
+  }, [logout]);
 
   const login = async (credentials) => {
     const response = await authService.login(credentials);
@@ -38,7 +46,7 @@ export const AuthProvider = ({ children }) => {
 
     localStorage.setItem(STORAGE_KEYS.TOKEN, token);
     localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
-    
+
     setUser(userData);
     setIsAuthenticated(true);
 
@@ -51,18 +59,11 @@ export const AuthProvider = ({ children }) => {
 
     localStorage.setItem(STORAGE_KEYS.TOKEN, token);
     localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(newUser));
-    
+
     setUser(newUser);
     setIsAuthenticated(true);
 
     return newUser;
-  };
-
-  const logout = () => {
-    localStorage.removeItem(STORAGE_KEYS.TOKEN);
-    localStorage.removeItem(STORAGE_KEYS.USER);
-    setUser(null);
-    setIsAuthenticated(false);
   };
 
   const updateUser = (updatedData) => {

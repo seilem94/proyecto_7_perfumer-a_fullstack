@@ -6,7 +6,13 @@ import { Input } from '../../components/common/Input';
 import { ROUTES } from '../../utils/constants';
 
 const Register = () => {
-  const { register, handleSubmit, formState: { errors, isSubmitting }, watch } = useForm();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    getValues,
+  } = useForm();
+
   const { register: registerUser } = useAuth();
   const navigate = useNavigate();
 
@@ -24,8 +30,6 @@ const Register = () => {
       alert(error || 'Error al registrarse');
     }
   };
-
-  const password = watch('password');
 
   return (
     <div className="max-w-md mx-auto bg-white rounded-xl shadow-md p-6">
@@ -70,8 +74,8 @@ const Register = () => {
           placeholder="••••••••"
           {...register('passwordConfirm', {
             required: 'Repite la contraseña',
-            validate: value =>
-              value === password || 'Las contraseñas no coinciden',
+            validate: (value) =>
+              value === getValues('password') || 'Las contraseñas no coinciden',
           })}
           error={errors.passwordConfirm?.message}
         />
