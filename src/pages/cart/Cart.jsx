@@ -1,8 +1,8 @@
+import { Link } from "react-router-dom";
 import { useCartStore } from "../../store/useCartStore";
 import { formatPrice } from "../../utils/formatters";
 import { Button } from "../../components/common/Button";
 import { Card } from "../../components/common/Card";
-import { Link } from "react-router-dom";
 
 export default function Cart() {
   const {
@@ -18,7 +18,7 @@ export default function Cart() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600" />
       </div>
     );
   }
@@ -43,13 +43,17 @@ export default function Cart() {
           <p className="text-gray-500 mb-8">
             ¡Aprovecha nuestras ofertas y llena tu carrito!
           </p>
-          <Button as={Link} to="/productos" className="px-8 py-3 text-lg">
+          {/* Fix: Link directo en vez de Button as={Link} */}
+          <Link
+            to="/productos"
+            className="inline-block px-8 py-3 text-lg bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition-colors"
+          >
             Continuar comprando
-          </Button>
+          </Link>
         </Card>
       ) : (
         <>
-          {/* Items del carrito */}
+          {/* Items */}
           <div className="space-y-4">
             {items.map((item) => (
               <Card key={item.perfume._id} className="p-6">
@@ -77,10 +81,7 @@ export default function Cart() {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() =>
-                            updateItemQuantity(
-                              item.perfume._id,
-                              item.quantity - 1,
-                            )
+                            updateItemQuantity(item.perfume._id, item.quantity - 1)
                           }
                           className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50"
                           disabled={item.quantity <= 1}
@@ -92,10 +93,7 @@ export default function Cart() {
                         </span>
                         <button
                           onClick={() =>
-                            updateItemQuantity(
-                              item.perfume._id,
-                              item.quantity + 1,
-                            )
+                            updateItemQuantity(item.perfume._id, item.quantity + 1)
                           }
                           className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100"
                         >
@@ -103,26 +101,22 @@ export default function Cart() {
                         </button>
                       </div>
 
-                      {/* Precio unitario */}
                       <span className="text-lg font-bold text-gray-900">
                         {formatPrice(item.price)}
                       </span>
 
-                      {/* Subtotal */}
                       <span className="text-xl font-bold text-purple-600 ml-auto">
                         {formatPrice(item.price * item.quantity)}
                       </span>
                     </div>
 
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeItem(item.perfume._id)}
-                      >
-                        Eliminar
-                      </Button>
-                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeItem(item.perfume._id)}
+                    >
+                      Eliminar
+                    </Button>
                   </div>
                 </div>
               </Card>
@@ -130,7 +124,7 @@ export default function Cart() {
           </div>
 
           {/* Resumen */}
-          <Card className="sticky bottom-0 p-6 lg:max-w-md mx-auto lg:ml-auto">
+          <Card className="sticky bottom-0 p-6 lg:max-w-md lg:ml-auto">
             <h3 className="text-xl font-bold mb-4">Resumen del pedido</h3>
             <div className="space-y-3 mb-6">
               <div className="flex justify-between text-lg">
