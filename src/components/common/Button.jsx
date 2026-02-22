@@ -1,19 +1,24 @@
-export  const Button = ({ 
-  children, 
-  variant = 'primary', 
+export const Button = ({
+  children,
+  variant = 'primary',
   type = 'button',
   onClick,
   disabled = false,
   className = '',
-  ...props 
+  size = 'md',
+  ...props
 }) => {
-  const baseStyles = 'px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
-  
   const variants = {
-    primary: 'bg-purple-600 text-white hover:bg-purple-700',
-    secondary: 'bg-gray-200 text-gray-700 hover:bg-gray-300',
-    danger: 'bg-red-600 text-white hover:bg-red-700',
-    outline: 'border-2 border-purple-600 text-purple-600 hover:bg-purple-50',
+    primary:   'btn-gold',
+    outline:   'btn-outline-gold',
+    secondary: 'btn-ghost',
+    danger:    'inline-flex items-center justify-center px-6 py-3 bg-red-700 text-white font-body text-xs font-medium tracking-widest uppercase transition-all hover:bg-red-800 disabled:opacity-40 disabled:cursor-not-allowed',
+  };
+
+  const sizes = {
+    sm:  'text-xs py-2 px-4',
+    md:  '',
+    lg:  'text-sm py-4 px-8',
   };
 
   return (
@@ -21,7 +26,7 @@ export  const Button = ({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`${baseStyles} ${variants[variant]} ${className}`}
+      className={`${variants[variant]} ${sizes[size]} ${className}`}
       {...props}
     >
       {children}

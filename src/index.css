@@ -1,89 +1,313 @@
 @import "tailwindcss";
 
-/* Estilos base */
-@layer base {
-  body {
-    background-color: rgb(249 250 251);
-    color: rgb(17 24 39);
-  }
+/* ── Google Fonts ─────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap');
+
+/* ── Design Tokens ────────────────────────────────────────────────────────── */
+:root {
+  --cream:        #F7F3EE;
+  --cream-dark:   #EDE6DA;
+  --champagne:    #D4B896;
+  --gold:         #B8975A;
+  --gold-light:   #D4AF72;
+  --gold-dark:    #8B6F3E;
+  --espresso:     #2C1810;
+  --charcoal:     #3D3530;
+  --stone:        #7A6E65;
+  --stone-light:  #A89B92;
+  --white:        #FDFAF7;
+
+  --font-display: 'Cormorant Garamond', serif;
+  --font-body:    'Jost', sans-serif;
+
+  --shadow-soft:   0 2px 20px rgba(44, 24, 16, 0.06);
+  --shadow-medium: 0 8px 40px rgba(44, 24, 16, 0.10);
+  --shadow-luxury: 0 20px 60px rgba(44, 24, 16, 0.15);
+  --shadow-gold:   0 4px 20px rgba(184, 151, 90, 0.28);
+
+  --transition: 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* Componentes personalizados */
+/* ── Reset & Base ─────────────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--cream);
+    color: var(--charcoal);
+    font-family: var(--font-body);
+    font-weight: 300;
+    line-height: 1.7;
+  }
+
+  h1, h2, h3, h4, h5 {
+    font-family: var(--font-display);
+    color: var(--espresso);
+    line-height: 1.2;
+    font-weight: 400;
+  }
+
+  ::selection {
+    background-color: var(--champagne);
+    color: var(--espresso);
+  }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--cream-dark); }
+  ::-webkit-scrollbar-thumb { background: var(--champagne); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+}
+
+/* ── Componentes ──────────────────────────────────────────────────────────── */
 @layer components {
-  .btn-primary {
-    padding-left: 1rem;
-    padding-right: 1rem;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-    background-color: rgb(147 51 234);
-    color: rgb(255 255 255);
-    border-radius: 0.5rem;
+
+  /* ── Botones ── */
+  .btn-gold {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.8rem 2.25rem;
+    background-color: var(--gold);
+    color: var(--white);
+    font-family: var(--font-body);
+    font-size: 0.75rem;
     font-weight: 500;
-    transition-property: all;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition);
+    position: relative;
+    overflow: hidden;
   }
-  
-  .btn-primary:hover {
-    background-color: rgb(126 34 206);
+  .btn-gold::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.12) 100%);
+    opacity: 0;
+    transition: opacity var(--transition);
   }
-  
-  .btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  .btn-gold:hover {
+    background-color: var(--gold-dark);
+    box-shadow: var(--shadow-gold);
+    transform: translateY(-1px);
   }
-  
-  .btn-secondary {
-    padding-left: 1rem;
-    padding-right: 1rem;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-    background-color: rgb(229 231 235);
-    color: rgb(55 65 81);
-    border-radius: 0.5rem;
+  .btn-gold:hover::after { opacity: 1; }
+  .btn-gold:active { transform: translateY(0); }
+  .btn-gold:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .btn-outline-gold {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 2rem;
+    background-color: transparent;
+    color: var(--gold);
+    font-family: var(--font-body);
+    font-size: 0.75rem;
     font-weight: 500;
-    transition-property: all;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    border: 1px solid var(--gold);
+    cursor: pointer;
+    transition: all var(--transition);
   }
-  
-  .btn-secondary:hover {
-    background-color: rgb(209 213 219);
+  .btn-outline-gold:hover {
+    background-color: var(--gold);
+    color: var(--white);
+    box-shadow: var(--shadow-gold);
+    transform: translateY(-1px);
   }
-  
-  .input-field {
+  .btn-outline-gold:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.5rem;
+    background-color: transparent;
+    color: var(--stone);
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid var(--stone-light);
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+  .btn-ghost:hover {
+    color: var(--espresso);
+    border-color: var(--charcoal);
+    background-color: rgba(44, 24, 16, 0.04);
+  }
+
+  /* ── Cards ── */
+  .card-luxury {
+    background-color: var(--white);
+    border: 1px solid rgba(212, 184, 150, 0.22);
+    box-shadow: var(--shadow-soft);
+    transition: all var(--transition);
+  }
+  .card-luxury:hover {
+    box-shadow: var(--shadow-medium);
+    border-color: rgba(184, 151, 90, 0.35);
+    transform: translateY(-3px);
+  }
+
+  /* ── Inputs ── */
+  .input-luxury {
     width: 100%;
-    padding-left: 1rem;
-    padding-right: 1rem;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-    border-width: 1px;
-    border-color: rgb(209 213 219);
-    border-radius: 0.5rem;
-    outline: 2px solid transparent;
-    outline-offset: 2px;
-    transition-property: all;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
+    padding: 0.75rem 1rem;
+    background-color: var(--white);
+    border: 1px solid rgba(212, 184, 150, 0.4);
+    color: var(--charcoal);
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 300;
+    outline: none;
+    transition: all var(--transition);
+    border-radius: 0;
+    appearance: none;
   }
-  
-  .input-field:focus {
-    --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
-    --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) rgb(147 51 234);
-    box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
-    border-color: transparent;
+  .input-luxury:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 2px rgba(184, 151, 90, 0.14);
   }
-  
-  .card {
-    background-color: rgb(255 255 255);
-    border-radius: 0.75rem;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    transition-property: box-shadow;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
+  .input-luxury::placeholder {
+    color: var(--stone-light);
+    font-style: italic;
   }
-  
-  .card:hover {
-    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /* ── Tipografía de lujo ── */
+  .text-display { font-family: var(--font-display); font-weight: 300; }
+  .text-label {
+    font-family: var(--font-body);
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
   }
+
+  /* ── Divisor ornamental ── */
+  .divider-gold {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
+  .divider-gold::before,
+  .divider-gold::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--champagne), transparent);
+  }
+
+  /* ── Línea dorada decorativa ── */
+  .gold-line {
+    width: 2.5rem;
+    height: 1px;
+    background: linear-gradient(90deg, var(--gold), var(--champagne));
+  }
+  .gold-line-center {
+    width: 2.5rem;
+    height: 1px;
+    background: linear-gradient(90deg, var(--champagne), var(--gold), var(--champagne));
+    margin: 0 auto;
+  }
+
+  /* ── Animaciones ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes shimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position:  200% center; }
+  }
+  @keyframes floatSoft {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-6px); }
+  }
+
+  .animate-fade-up            { animation: fadeUp 0.65s ease forwards; }
+  .animate-fade-up-delay-1    { animation: fadeUp 0.65s 0.08s ease both; }
+  .animate-fade-up-delay-2    { animation: fadeUp 0.65s 0.16s ease both; }
+  .animate-fade-up-delay-3    { animation: fadeUp 0.65s 0.24s ease both; }
+  .animate-fade-up-delay-4    { animation: fadeUp 0.65s 0.32s ease both; }
+  .animate-fade-up-delay-5    { animation: fadeUp 0.65s 0.40s ease both; }
+  .animate-float-soft         { animation: floatSoft 4s ease-in-out infinite; }
+
+  .shimmer-gold {
+    background: linear-gradient(
+      90deg,
+      var(--gold-dark) 0%,
+      var(--gold-light) 40%,
+      var(--gold) 60%,
+      var(--gold-dark) 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 4s linear infinite;
+  }
+
+  /* ── Overlay de imagen ── */
+  .img-overlay::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      transparent 50%,
+      rgba(44, 24, 16, 0.5) 100%
+    );
+  }
+
+  /* ── Texture background ── */
+  .bg-texture {
+    background-color: var(--cream);
+    background-image:
+      radial-gradient(ellipse at 20% 50%, rgba(212, 184, 150, 0.12) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(184, 151, 90, 0.08) 0%, transparent 50%);
+  }
+
+  /* ── Nav link ── */
+  .nav-link {
+    position: relative;
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--stone);
+    transition: color var(--transition);
+    padding-bottom: 2px;
+  }
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background-color: var(--gold);
+    transition: width var(--transition);
+  }
+  .nav-link:hover { color: var(--espresso); }
+  .nav-link:hover::after { width: 100%; }
+  .nav-link.active { color: var(--gold); }
+  .nav-link.active::after { width: 100%; }
 }

@@ -1,9 +1,14 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
-import { productService } from "../../api/productService";
-import { useCartStore } from "../../store/useCartStore";
-import { formatPrice } from "../../utils/formatters";
-import { Button } from "../../components/common/Button";
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { productService } from '../../api/productService';
+import { useCartStore } from '../../store/useCartStore';
+import { formatPrice } from '../../utils/formatters';
+
+const categoryStyle = {
+  Mujer:  { color: '#9B7B6E', border: 'rgba(155,123,110,0.4)' },
+  Hombre: { color: '#6E7B9B', border: 'rgba(110,123,155,0.4)' },
+  Unisex: { color: '#8B7A6E', border: 'rgba(139,122,110,0.4)' },
+};
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -22,30 +27,36 @@ export default function ProductDetail() {
       setError(null);
       try {
         const response = await productService.getProductById(id);
-        // El backend puede devolver { perfume } o directamente el objeto
         setProduct(response.data.perfume || response.data);
       } catch (err) {
-        setError("No se pudo cargar el producto.");
-        console.error("❌ Error al cargar producto:", err);
+        setError('No se pudo cargar el producto.');
+        console.error('❌ Error al cargar producto:', err);
       } finally {
         setLoading(false);
       }
     };
-
     if (id) fetchProduct();
   }, [id]);
 
   const handleAddToCart = () => {
     addItem(product, quantity);
     setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
+    setTimeout(() => setAdded(false), 2500);
   };
 
   // ── Loading ──────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-32">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600" />
+      <div className="flex flex-col items-center justify-center py-40 gap-6">
+        <div style={{
+          width: '40px', height: '40px', borderRadius: '50%',
+          border: '1px solid var(--champagne)', borderTopColor: 'var(--gold)',
+          animation: 'spin 1s linear infinite',
+        }} />
+        <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontStyle: 'italic', color: 'var(--stone)' }}>
+          Cargando fragancia...
+        </p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -53,152 +64,232 @@ export default function ProductDetail() {
   // ── Error ────────────────────────────────────────────────────────────────
   if (error || !product) {
     return (
-      <div className="max-w-2xl mx-auto text-center py-20">
-        <span className="text-6xl mb-6 block">🚫</span>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Producto no encontrado
+      <div className="text-center py-28">
+        <div style={{
+          width: '80px', height: '80px', margin: '0 auto 2rem',
+          border: '1px solid var(--champagne)', borderRadius: '50%',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--champagne)',
+        }}>
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 400, color: 'var(--espresso)', marginBottom: '0.75rem' }}>
+          Fragancia no encontrada
         </h2>
-        <p className="text-gray-500 mb-8">{error}</p>
-        <Button onClick={() => navigate("/productos")} variant="primary">
-          Volver a productos
-        </Button>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.875rem', color: 'var(--stone)', marginBottom: '2rem' }}>
+          {error}
+        </p>
+        <button onClick={() => navigate('/productos')} className="btn-gold">
+          Volver al catálogo
+        </button>
       </div>
     );
   }
 
-  // ── Vista ────────────────────────────────────────────────────────────────
-  const categoryColor =
-    product.category === "Hombre"
-      ? "bg-blue-100 text-blue-800"
-      : product.category === "Mujer"
-      ? "bg-pink-100 text-pink-800"
-      : "bg-indigo-100 text-indigo-800";
-
-  const stockStatus =
-    product.stock > 10
-      ? { label: "En stock", cls: "bg-emerald-100 text-emerald-800" }
-      : product.stock > 0
-      ? { label: `Últimas ${product.stock} unidades`, cls: "bg-amber-100 text-amber-800" }
-      : { label: "Sin stock", cls: "bg-red-100 text-red-800" };
+  const inStock = product.stock > 0;
+  const catStyle = categoryStyle[product.category] || categoryStyle.Unisex;
+  const stockLabel = product.stock > 10 ? 'En stock' : product.stock > 0 ? `Últimas ${product.stock} unidades` : 'Agotado';
+  const stockColor = product.stock > 10 ? '#6B8F6B' : product.stock > 0 ? 'var(--gold-dark)' : '#8B4545';
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-gray-500 mb-8">
-        <Link to="/productos" className="hover:text-purple-600 transition-colors">
-          Productos
+    <div className="animate-fade-up">
+
+      {/* ── Breadcrumb ── */}
+      <nav className="flex items-center gap-3 mb-12" style={{
+        fontFamily: 'var(--font-body)', fontSize: '0.68rem',
+        letterSpacing: '0.12em', textTransform: 'uppercase',
+      }}>
+        <Link to="/productos" style={{ color: 'var(--stone)', textDecoration: 'none', transition: 'color 0.3s' }}
+          onMouseEnter={e => e.target.style.color = 'var(--gold)'}
+          onMouseLeave={e => e.target.style.color = 'var(--stone)'}
+        >
+          Colección
         </Link>
-        <span>/</span>
-        <span className="text-gray-900 font-medium truncate">{product.name}</span>
+        <span style={{ color: 'var(--champagne)' }}>—</span>
+        <span style={{ color: 'var(--espresso)' }}>{product.name}</span>
       </nav>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        {/* Imagen */}
-        <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl overflow-hidden">
-          <img
-            src={
-              product.image ||
-              `https://via.placeholder.com/600x600/${
-                product.category === "Hombre" ? "4169E1" : "FF69B4"
-              }/FFFFFF?text=${encodeURIComponent(product.name)}`
-            }
-            alt={product.name}
-            className="w-full h-full object-cover"
-          />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+
+        {/* ── Imagen ── */}
+        <div className="relative">
+          {/* Marco decorativo */}
+          <div style={{
+            position: 'absolute', inset: '-12px',
+            border: '1px solid rgba(212,184,150,0.2)',
+            pointerEvents: 'none', zIndex: 0,
+          }} />
+          <div
+            className="relative overflow-hidden"
+            style={{ aspectRatio: '1', backgroundColor: 'var(--cream-dark)', zIndex: 1 }}
+          >
+            <img
+              src={product.image || 'https://images.unsplash.com/photo-1541643600914-78b084683702?w=700&h=700&fit=crop'}
+              alt={product.name}
+              className="w-full h-full object-cover"
+              style={{ transition: 'transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)' }}
+              onMouseEnter={e => e.target.style.transform = 'scale(1.04)'}
+              onMouseLeave={e => e.target.style.transform = 'scale(1)'}
+              onError={e => { e.target.src = 'https://images.unsplash.com/photo-1541643600914-78b084683702?w=700&h=700&fit=crop'; }}
+            />
+          </div>
+          {/* Ángulo decorativo dorado */}
+          <div style={{
+            position: 'absolute', bottom: '-12px', right: '-12px',
+            width: '48px', height: '48px', zIndex: 2,
+            borderBottom: '1px solid var(--gold)', borderRight: '1px solid var(--gold)',
+          }} />
+          <div style={{
+            position: 'absolute', top: '-12px', left: '-12px',
+            width: '48px', height: '48px', zIndex: 2,
+            borderTop: '1px solid var(--gold)', borderLeft: '1px solid var(--gold)',
+          }} />
         </div>
 
-        {/* Info */}
-        <div className="flex flex-col gap-6">
+        {/* ── Info ── */}
+        <div className="flex flex-col gap-7 lg:py-4">
+
           {/* Badges */}
-          <div className="flex gap-2 flex-wrap">
-            <span className={`px-3 py-1 text-xs font-bold rounded-full ${categoryColor}`}>
-              {product.category}
-            </span>
-            <span className={`px-3 py-1 text-xs font-bold rounded-full ${stockStatus.cls}`}>
-              {stockStatus.label}
-            </span>
+          <div className="flex items-center gap-3 flex-wrap">
+            <span style={{
+              fontFamily: 'var(--font-body)', fontSize: '0.6rem', letterSpacing: '0.2em',
+              textTransform: 'uppercase', color: catStyle.color,
+              border: `1px solid ${catStyle.border}`, padding: '0.2rem 0.75rem',
+            }}>{product.category}</span>
+            <span style={{
+              fontFamily: 'var(--font-body)', fontSize: '0.6rem', letterSpacing: '0.18em',
+              textTransform: 'uppercase', color: stockColor,
+              border: `1px solid ${stockColor}`, padding: '0.2rem 0.75rem', opacity: 0.85,
+            }}>{stockLabel}</span>
           </div>
 
-          {/* Nombre y marca */}
+          {/* Nombre */}
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-1">{product.name}</h1>
-            <p className="text-lg font-semibold text-gray-500">{product.brand}</p>
+            <p style={{
+              fontFamily: 'var(--font-body)', fontSize: '0.7rem', fontWeight: 400,
+              color: 'var(--stone)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: '0.5rem',
+            }}>{product.brand}</p>
+            <h1 style={{
+              fontFamily: 'var(--font-display)', fontSize: 'clamp(2rem, 4vw, 3rem)',
+              fontWeight: 300, color: 'var(--espresso)', lineHeight: 1.1,
+            }}>{product.name}</h1>
           </div>
+
+          {/* Línea dorada */}
+          <div className="gold-line" />
 
           {/* Precio */}
-          <div className="text-4xl font-bold text-purple-600">
-            {formatPrice(product.price)}
+          <div>
+            <span className="text-label" style={{ display: 'block', marginBottom: '0.25rem' }}>Precio</span>
+            <span style={{
+              fontFamily: 'var(--font-display)', fontSize: '2.5rem',
+              fontWeight: 300, color: 'var(--gold)', lineHeight: 1,
+            }}>{formatPrice(product.price)}</span>
           </div>
 
           {/* Descripción */}
           {product.description && (
-            <p className="text-gray-600 leading-relaxed">{product.description}</p>
+            <p style={{
+              fontFamily: 'var(--font-body)', fontSize: '0.9rem', fontWeight: 300,
+              color: 'var(--stone)', lineHeight: 1.9,
+            }}>{product.description}</p>
           )}
 
-          {/* Detalles adicionales */}
+          {/* Detalles extra */}
           {(product.size || product.fragrance) && (
-            <div className="border-t border-gray-100 pt-4 space-y-2 text-sm text-gray-600">
-              {product.size && (
-                <div className="flex justify-between">
-                  <span className="font-medium text-gray-900">Tamaño</span>
-                  <span>{product.size} ml</span>
-                </div>
-              )}
-              {product.fragrance && (
-                <div className="flex justify-between">
-                  <span className="font-medium text-gray-900">Fragancia</span>
-                  <span>{product.fragrance}</span>
-                </div>
-              )}
+            <div style={{ borderTop: '1px solid rgba(212,184,150,0.25)', paddingTop: '1.5rem' }}>
+              <span className="text-label" style={{ display: 'block', marginBottom: '1rem' }}>Detalles</span>
+              <div className="space-y-3">
+                {product.size && (
+                  <div className="flex justify-between" style={{ fontFamily: 'var(--font-body)', fontSize: '0.825rem' }}>
+                    <span style={{ color: 'var(--stone)', letterSpacing: '0.06em' }}>Presentación</span>
+                    <span style={{ color: 'var(--espresso)', fontWeight: 400 }}>{product.size} ml</span>
+                  </div>
+                )}
+                {product.fragrance && (
+                  <div className="flex justify-between" style={{ fontFamily: 'var(--font-body)', fontSize: '0.825rem' }}>
+                    <span style={{ color: 'var(--stone)', letterSpacing: '0.06em' }}>Familia olfativa</span>
+                    <span style={{ color: 'var(--espresso)', fontWeight: 400 }}>{product.fragrance}</span>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
-          {/* Selector de cantidad */}
-          {product.stock > 0 && (
-            <div className="flex items-center gap-4">
-              <span className="font-medium text-gray-700">Cantidad</span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 font-bold"
-                  disabled={quantity <= 1}
-                >
-                  -
-                </button>
-                <span className="w-10 text-center font-bold text-lg">{quantity}</span>
-                <button
-                  onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
-                  className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 font-bold"
-                  disabled={quantity >= product.stock}
-                >
-                  +
-                </button>
+          {/* Selector cantidad */}
+          {inStock && (
+            <div>
+              <span className="text-label" style={{ display: 'block', marginBottom: '0.75rem' }}>Cantidad</span>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center" style={{ border: '1px solid rgba(212,184,150,0.4)' }}>
+                  <button
+                    onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                    disabled={quantity <= 1}
+                    style={{
+                      width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: 'var(--stone)', cursor: quantity <= 1 ? 'not-allowed' : 'pointer',
+                      opacity: quantity <= 1 ? 0.4 : 1, background: 'none', border: 'none',
+                      fontFamily: 'var(--font-body)', fontSize: '1.1rem', transition: 'color 0.3s',
+                    }}
+                    onMouseEnter={e => { if (quantity > 1) e.target.style.color = 'var(--gold)'; }}
+                    onMouseLeave={e => e.target.style.color = 'var(--stone)'}
+                  >−</button>
+                  <span style={{
+                    width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 400, color: 'var(--espresso)',
+                    borderLeft: '1px solid rgba(212,184,150,0.4)', borderRight: '1px solid rgba(212,184,150,0.4)',
+                  }}>{quantity}</span>
+                  <button
+                    onClick={() => setQuantity(q => Math.min(product.stock, q + 1))}
+                    disabled={quantity >= product.stock}
+                    style={{
+                      width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: 'var(--stone)', cursor: quantity >= product.stock ? 'not-allowed' : 'pointer',
+                      opacity: quantity >= product.stock ? 0.4 : 1, background: 'none', border: 'none',
+                      fontFamily: 'var(--font-body)', fontSize: '1.1rem', transition: 'color 0.3s',
+                    }}
+                    onMouseEnter={e => { if (quantity < product.stock) e.target.style.color = 'var(--gold)'; }}
+                    onMouseLeave={e => e.target.style.color = 'var(--stone)'}
+                  >+</button>
+                </div>
+                <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', color: 'var(--stone-light)', letterSpacing: '0.06em' }}>
+                  {product.stock} disponibles
+                </span>
               </div>
             </div>
           )}
 
           {/* Acciones */}
-          <div className="flex gap-4 pt-2">
-            <Button
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
               onClick={handleAddToCart}
-              variant="primary"
-              className="flex-1 py-4 text-lg"
-              disabled={product.stock === 0}
+              disabled={!inStock}
+              className="btn-gold"
+              style={{ flex: 1, padding: '1rem', fontSize: '0.75rem' }}
             >
-              {added ? "✅ Agregado" : product.stock === 0 ? "Sin stock" : "Agregar al carrito"}
-            </Button>
+              {added ? '✓ Añadido al carrito' : !inStock ? 'Fragancia agotada' : 'Añadir al carrito'}
+            </button>
             <Link
               to="/carrito"
-              className="flex items-center justify-center px-6 py-4 border-2 border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 font-medium transition-colors"
+              className="btn-outline-gold"
+              style={{ flex: '0 0 auto', padding: '1rem 1.5rem', fontSize: '0.75rem' }}
             >
-              Ver carrito
+              Ver bolsa
             </Link>
           </div>
 
           {/* Volver */}
           <button
             onClick={() => navigate(-1)}
-            className="text-sm text-gray-500 hover:text-gray-700 underline self-start"
+            style={{
+              fontFamily: 'var(--font-body)', fontSize: '0.68rem', letterSpacing: '0.12em',
+              textTransform: 'uppercase', color: 'var(--stone)', background: 'none', border: 'none',
+              cursor: 'pointer', alignSelf: 'flex-start', textDecoration: 'underline',
+              textDecorationColor: 'var(--champagne)', transition: 'color 0.3s',
+            }}
+            onMouseEnter={e => e.target.style.color = 'var(--gold)'}
+            onMouseLeave={e => e.target.style.color = 'var(--stone)'}
           >
             ← Volver
           </button>
