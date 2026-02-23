@@ -106,11 +106,11 @@ export default function Home() {
 
         {/* Círculo decorativo derecho */}
         <div
-          className="absolute -right-40 top-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-10"
+          className="absolute -right-40 top-1/2 -translate-y-1/2 w-150 h-150 rounded-full opacity-10"
           style={{ border: "1px solid var(--gold)" }}
         />
         <div
-          className="absolute -right-20 top-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full opacity-15"
+          className="absolute -right-20 top-1/2 -translate-y-1/2 w-100 h-100 rounded-full opacity-15"
           style={{ border: "1px solid var(--champagne)" }}
         />
 
