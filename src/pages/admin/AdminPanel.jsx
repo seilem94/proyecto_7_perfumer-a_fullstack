@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { productService } from '../../api/productService';
 import { formatPrice } from '../../utils/formatters';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/authContext';
 
 const StatCard = ({ label, value, sub, icon }) => (
   <div style={{ backgroundColor: 'var(--white)', border: '1px solid rgba(212,184,150,0.22)', boxShadow: 'var(--shadow-soft)', padding: '1.75rem' }}>
@@ -45,7 +45,8 @@ export default function AdminPanel() {
     const fetchData = async () => {
       try {
         const res = await productService.getAllProducts();
-        const products = res.data?.perfumes || res.data || [];
+        const data = res.data?.data;
+        const products = data?.perfumes ?? data ?? [];
         const totalValue = products.reduce((sum, p) => sum + p.price * p.stock, 0);
         setStats({
           total: products.length,
@@ -72,7 +73,6 @@ export default function AdminPanel() {
         <div className="gold-line mt-3" />
       </div>
 
-      {/* Stats */}
       {loading ? (
         <div className="flex justify-center py-16">
           <div style={{ width: '36px', height: '36px', borderRadius: '50%', border: '1px solid var(--champagne)', borderTopColor: 'var(--gold)', animation: 'spin 1s linear infinite' }} />
@@ -80,10 +80,11 @@ export default function AdminPanel() {
         </div>
       ) : (
         <>
+          {/* Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
             <StatCard label="Total productos" value={stats?.total ?? '—'} sub="En el catálogo"
               icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>} />
-            <StatCard label="En stock" value={stats?.inStock ?? '—'} sub="Disponibles para venta"
+            <StatCard label="En stock" value={stats?.inStock ?? '—'} sub="Disponibles"
               icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>} />
             <StatCard label="Stock bajo" value={stats?.lowStock ?? '—'} sub="Menos de 10 unidades"
               icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>} />
@@ -94,11 +95,13 @@ export default function AdminPanel() {
           {/* Accesos rápidos */}
           <div className="mb-10">
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 400, color: 'var(--espresso)', marginBottom: '1rem' }}>Acciones rápidas</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <QuickLink to="/admin/productos/crear" label="Agregar perfume" desc="Crear un nuevo producto en el catálogo"
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <QuickLink to="/admin/productos/crear" label="Agregar perfume" desc="Crear un nuevo producto"
                 icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>} />
-              <QuickLink to="/admin/productos" label="Ver catálogo" desc="Gestionar todos los perfumes existentes"
+              <QuickLink to="/admin/productos" label="Catálogo" desc="Gestionar todos los perfumes"
                 icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>} />
+              <QuickLink to="/admin/usuarios" label="Usuarios" desc="Gestionar roles y accesos"
+                icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>} />
             </div>
           </div>
 
@@ -113,7 +116,11 @@ export default function AdminPanel() {
               </div>
               <div style={{ backgroundColor: 'var(--white)', border: '1px solid rgba(212,184,150,0.22)', boxShadow: 'var(--shadow-soft)' }}>
                 {recentProducts.map((p, i) => (
-                  <div key={p._id} className="flex items-center gap-4 px-5 py-4" style={{ borderBottom: i < recentProducts.length - 1 ? '1px solid rgba(212,184,150,0.15)' : 'none', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(247,243,238,0.5)'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                  <div key={p._id} className="flex items-center gap-4 px-5 py-4"
+                    style={{ borderBottom: i < recentProducts.length - 1 ? '1px solid rgba(212,184,150,0.15)' : 'none', transition: 'background 0.2s' }}
+                    onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(247,243,238,0.5)'}
+                    onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
                     <div style={{ width: '44px', height: '44px', overflow: 'hidden', backgroundColor: 'var(--cream-dark)', flexShrink: 0 }}>
                       <img src={p.image || 'https://images.unsplash.com/photo-1541643600914-78b084683702?w=88&h=88&fit=crop'} alt={p.name} className="w-full h-full object-cover" onError={e => { e.target.src = 'https://images.unsplash.com/photo-1541643600914-78b084683702?w=88&h=88&fit=crop'; }} />
                     </div>
@@ -125,7 +132,11 @@ export default function AdminPanel() {
                       <p style={{ fontFamily: 'var(--font-display)', fontSize: '0.95rem', color: 'var(--gold)' }}>{formatPrice(p.price)}</p>
                       <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.68rem', color: p.stock === 0 ? '#8B4545' : p.stock <= 10 ? 'var(--gold-dark)' : '#6B8F6B' }}>{p.stock} en stock</p>
                     </div>
-                    <Link to={`/admin/productos/editar/${p._id}`} style={{ fontFamily: 'var(--font-body)', fontSize: '0.62rem', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '0.35rem 0.75rem', border: '1px solid rgba(184,151,90,0.3)', color: 'var(--gold)', textDecoration: 'none', flexShrink: 0, transition: 'all 0.3s' }} onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--gold)'; e.currentTarget.style.color = 'white'; }} onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--gold)'; }}>
+                    <Link to={`/admin/productos/editar/${p._id}`}
+                      style={{ fontFamily: 'var(--font-body)', fontSize: '0.62rem', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '0.35rem 0.75rem', border: '1px solid rgba(184,151,90,0.3)', color: 'var(--gold)', textDecoration: 'none', flexShrink: 0, transition: 'all 0.3s' }}
+                      onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--gold)'; e.currentTarget.style.color = 'white'; }}
+                      onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--gold)'; }}
+                    >
                       Editar
                     </Link>
                   </div>
