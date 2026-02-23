@@ -231,7 +231,7 @@ export default function Checkout() {
   const navigate = useNavigate();
   const { items, totalPrice, clearCart } = useCartStore();
   const [step, setStep] = useState(1);
-  const [shippingData, setShippingData] = useState(null);
+  const [shippingInfo, setShippingInfo] = useState({});
   const [confirmed, setConfirmed] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
 
@@ -254,7 +254,7 @@ export default function Checkout() {
   }
 
   const handleShipping = (data) => {
-    setShippingData(data);
+    setShippingInfo(data);
     setStep(2);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -320,7 +320,7 @@ export default function Checkout() {
                 subtotal={totalPrice}
                 shippingCost={shipping}
                 items={items}
-                shippingInfo={shippingData}
+                shippingInfo={shippingInfo}
                 onSuccess={handlePaymentSuccess}
                 onBack={() => setStep(1)}
               />
