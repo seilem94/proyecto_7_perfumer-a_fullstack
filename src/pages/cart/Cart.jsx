@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useCartStore } from "../../store/useCartStore";
 import { formatPrice } from "../../utils/formatters";
-import { useAuth } from "../../context/authContext";
+import { useAuth } from "../../context/AuthContext";
 
 const QtyButton = ({ onClick, disabled, children }) => (
   <button

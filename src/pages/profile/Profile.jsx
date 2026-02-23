@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useAuth } from '../../context/authContext';
+import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../api/authService';
 import { Input } from '../../components/common/Input';
 import { formatDate } from '../../utils/formatters';

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../../context/authContext";
+import { useAuth } from "../../context/AuthContext";
 import { Input } from "../../components/common/Input";
 import { PasswordInput } from "../../components/common/PasswordInput";
 import { ROUTES } from "../../utils/constants";
