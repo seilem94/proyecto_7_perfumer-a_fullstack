@@ -71,7 +71,7 @@ const OrderConfirmed = ({ orderNumber, onDone }) => (
   <div className="text-center py-16 animate-fade-up max-w-lg mx-auto">
     <div style={{ width: '88px', height: '88px', margin: '0 auto 2rem', border: '1px solid var(--gold)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold)' }}>
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
-        <path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+        <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
       </svg>
     </div>
     <span className="text-label block mb-3">Pedido confirmado</span>
@@ -94,7 +94,7 @@ const OrderConfirmed = ({ orderNumber, onDone }) => (
 
 // ── Formulario de pago con Stripe Elements ────────────────────────────────────
 // Componente separado porque useStripe/useElements requieren estar dentro de <Elements>
-const StripePaymentForm = ({ finalTotal, items, onSuccess, onBack }) => {
+const StripePaymentForm = ({ finalTotal, subtotal, shippingCost, items, shippingInfo, onSuccess, onBack }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [processing, setProcessing] = useState(false);
@@ -107,14 +107,17 @@ const StripePaymentForm = ({ finalTotal, items, onSuccess, onBack }) => {
     setStripeError('');
 
     try {
-      // 1. Pedir clientSecret al backend
-      const response = await axiosInstance.post('/orders/create-payment-intent', {
+      // 1. Crear PaymentIntent + Order pending en el backend
+      const intentResponse = await axiosInstance.post('/orders/create-payment-intent', {
         amount: finalTotal,
         items,
+        shipping: shippingInfo,
+        subtotal: subtotal,
+        shippingCost: shippingCost,
       });
-      const { clientSecret } = response.data.data;
+      const { clientSecret, paymentIntentId, orderNumber } = intentResponse.data.data;
 
-      // 2. Confirmar el pago con Stripe.js usando el CardNumberElement
+      // 2. Confirmar el pago con Stripe.js
       const cardElement = elements.getElement(CardNumberElement);
       const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: { card: cardElement },
@@ -126,7 +129,9 @@ const StripePaymentForm = ({ finalTotal, items, onSuccess, onBack }) => {
       }
 
       if (paymentIntent.status === 'succeeded') {
-        onSuccess();
+        // 3. Confirmar la orden en el backend — actualiza status a 'paid'
+        await axiosInstance.post('/orders/confirm', { paymentIntentId });
+        onSuccess(orderNumber);
       }
     } catch (err) {
       setStripeError(typeof err === 'string' ? err : 'Error al procesar el pago. Intente nuevamente.');
@@ -226,8 +231,9 @@ export default function Checkout() {
   const navigate = useNavigate();
   const { items, totalPrice, clearCart } = useCartStore();
   const [step, setStep] = useState(1);
+  const [shippingData, setShippingData] = useState(null);
   const [confirmed, setConfirmed] = useState(false);
-  const [orderNumber] = useState(() => Math.floor(100000 + Math.random() * 900000));
+  const [orderNumber, setOrderNumber] = useState('');
 
   const shipping = totalPrice >= 150000 ? 0 : 5990;
   const finalTotal = totalPrice + shipping;
@@ -247,12 +253,14 @@ export default function Checkout() {
     return <OrderConfirmed orderNumber={orderNumber} onDone={() => navigate('/')} />;
   }
 
-  const handleShipping = () => {
+  const handleShipping = (data) => {
+    setShippingData(data);
     setStep(2);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = (orderNum) => {
+    setOrderNumber(orderNum);
     clearCart();
     setConfirmed(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -309,7 +317,10 @@ export default function Checkout() {
             <Elements stripe={stripePromise}>
               <StripePaymentForm
                 finalTotal={finalTotal}
+                subtotal={totalPrice}
+                shippingCost={shipping}
                 items={items}
+                shippingInfo={shippingData}
                 onSuccess={handlePaymentSuccess}
                 onBack={() => setStep(1)}
               />
