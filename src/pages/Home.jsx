@@ -1,5 +1,7 @@
-import { Link } from "react-router-dom";
-import { ROUTES } from "../utils/constants";
+import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { ROUTES } from '../../utils/constants';
+import axiosInstance from '../../api/axiosConfig';
 
 const categories = [
   {
@@ -85,6 +87,12 @@ const features = [
 ];
 
 export default function Home() {
+  useEffect(() => {
+    // Ping silencioso al backend para despertarlo en segundo plano
+    // Render apaga el servidor tras 15min de inactividad en el plan gratuito
+    axiosInstance.get('/perfumes/readall').catch(() => { });
+  }, []);
+  
   return (
     <div className="space-y-24 -mt-10">
       {/* ── HERO ────────────────────────────────────────────────────────────── */}
