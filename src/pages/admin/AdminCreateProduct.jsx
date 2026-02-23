@@ -38,7 +38,7 @@ export default function AdminCreateProduct() {
     const fetchProduct = async () => {
       try {
         const res = await productService.getProductById(id);
-        const p = res.data?.perfume || res.data;
+        const p = res.data?.data?.perfume ?? res.data?.data ?? res.data;
         reset({ name: p.name || '', brand: p.brand || '', description: p.description || '', price: p.price || '', stock: p.stock || '', category: p.category || '', image: p.image || '' });
         setPreviewImage(p.image || '');
       } catch {

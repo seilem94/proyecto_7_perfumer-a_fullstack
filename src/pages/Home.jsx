@@ -23,7 +23,7 @@ const categories = [
     sub: "Sin límites, sin género",
     filter: "Unisex",
     image:
-      "https://images.unsplash.com/photo-1541643600914-78b084683702?w=600&h=800&fit=crop",
+      "https://aromatica.cr/cdn/shop/files/Decant-Aoud-Lemon-Mint-unisex-Arom_tica-CR-367596918.png?v=1743441435&width=990",
     accent: "#B8975A",
   },
 ];

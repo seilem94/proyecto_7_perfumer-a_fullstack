@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import { MainLayout } from '../components/layout/MainLayout';
 import { PrivateRoute } from './PrivateRoute';
 import { AdminRoute } from './AdminRoute';
+import AdminUsers from '../pages/admin/AdminUsers';
 
 // Páginas públicas
 import Home from '../pages/Home';
@@ -31,6 +32,7 @@ export const AppRoutes = () => {
         <Route path="/productos"    element={<Products />} />
         <Route path="/productos/:id" element={<ProductDetail />} />
         <Route path="/carrito"   element={<Cart />} />
+        <Route path="/admin/usuarios" element={<AdminUsers />} />
         
         {/* ── Protegidas (usuario autenticado) ── */}
         <Route element={<PrivateRoute />}>        

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/authContext';
 import { authService } from '../../api/authService';
 import { Input } from '../../components/common/Input';
 import { formatDate } from '../../utils/formatters';
@@ -32,7 +32,7 @@ export default function Profile() {
     setSaveError('');
     try {
       const response = await authService.updateProfile(data);
-      const updated = response.data?.user || response.data || data;
+      const updated = response.data?.data?.user ?? response.data?.data ?? data;
       updateUser(updated);
       setSaveSuccess(true);
       setEditMode(false);

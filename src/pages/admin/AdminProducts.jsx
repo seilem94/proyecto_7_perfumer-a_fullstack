@@ -6,7 +6,7 @@ import { formatPrice } from '../../utils/formatters';
 const StatusBadge = ({ stock }) => {
   const cfg = stock > 10 ? { label: 'En stock', color: '#6B8F6B', bg: 'rgba(107,143,107,0.08)', border: 'rgba(107,143,107,0.3)' }
     : stock > 0 ? { label: `${stock} restantes`, color: 'var(--gold-dark)', bg: 'rgba(184,151,90,0.08)', border: 'rgba(184,151,90,0.3)' }
-    : { label: 'Agotado', color: '#8B4545', bg: 'rgba(139,69,69,0.06)', border: 'rgba(139,69,69,0.2)' };
+      : { label: 'Agotado', color: '#8B4545', bg: 'rgba(139,69,69,0.06)', border: 'rgba(139,69,69,0.2)' };
   return (
     <span style={{ padding: '0.15rem 0.65rem', fontFamily: 'var(--font-body)', fontSize: '0.6rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: cfg.color, backgroundColor: cfg.bg, border: `1px solid ${cfg.border}` }}>
       {cfg.label}
@@ -19,7 +19,7 @@ const DeleteModal = ({ product, onConfirm, onCancel }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(44,24,16,0.5)' }} onClick={e => e.target === e.currentTarget && onCancel()}>
     <div className="animate-fade-up w-full max-w-sm" style={{ backgroundColor: 'var(--white)', border: '1px solid rgba(212,184,150,0.3)', boxShadow: 'var(--shadow-luxury)', padding: '2.5rem', textAlign: 'center' }}>
       <div style={{ width: '60px', height: '60px', margin: '0 auto 1.5rem', border: '1px solid rgba(139,69,69,0.3)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B4545' }}>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" /></svg>
       </div>
       <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 400, color: 'var(--espresso)', marginBottom: '0.75rem' }}>Eliminar producto</h3>
       <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.82rem', color: 'var(--stone)', lineHeight: 1.7, marginBottom: '2rem' }}>
@@ -122,7 +122,7 @@ export default function AdminProducts() {
       <div className="relative mb-6" style={{ maxWidth: '360px' }}>
         <input type="text" placeholder="Buscar por nombre o marca..." value={search} onChange={e => setSearch(e.target.value)} className="input-luxury" style={{ paddingLeft: '2.25rem' }} />
         <svg className="absolute left-3 top-1/2 -translate-y-1/2" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--stone-light)' }}>
-          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+          <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
         </svg>
       </div>
 
