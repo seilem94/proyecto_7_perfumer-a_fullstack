@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ROUTES } from "../../utils/constants";
+import { ROUTES } from "../utils/constants";
 
 const categories = [
   {

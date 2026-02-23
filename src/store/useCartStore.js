@@ -9,7 +9,6 @@ export const useCartStore = create((set, get) => ({
   loading: false,
   isGuest: true,
 
-  // Cargar carrito desde localStorage (invitados) o backend (usuarios)
   initializeCart: async (isAuthenticated) => {
     if (isAuthenticated) {
       await get().fetchCartFromBackend();
@@ -18,12 +17,11 @@ export const useCartStore = create((set, get) => ({
     }
   },
 
-  // Cargar carrito de invitado desde localStorage
   loadGuestCart: () => {
     const savedCart = localStorage.getItem(STORAGE_KEYS.GUEST_CART);
     if (savedCart) {
       const cart = JSON.parse(savedCart);
-      set({ 
+      set({
         items: cart.items || [],
         totalItems: cart.totalItems || 0,
         totalPrice: cart.totalPrice || 0,
@@ -32,7 +30,6 @@ export const useCartStore = create((set, get) => ({
     }
   },
 
-  // Guardar carrito de invitado en localStorage
   saveGuestCart: () => {
     const { items, totalItems, totalPrice } = get();
     localStorage.setItem(
@@ -41,15 +38,19 @@ export const useCartStore = create((set, get) => ({
     );
   },
 
-  // Obtener carrito desde backend (usuarios autenticados)
+  // GET /cart devuelve: { success: true, data: { items, totalItems, totalPrice, ... } }
   fetchCartFromBackend: async () => {
     set({ loading: true });
     try {
       const response = await cartService.getCart();
+
+      // Un solo nivel de data: response.data.data
+      const cartData = response.data.data;
+
       set({
-        items: response.data.items || [],
-        totalItems: response.data.totalItems || 0,
-        totalPrice: response.data.totalPrice || 0,
+        items: cartData.items || [],
+        totalItems: cartData.totalItems || 0,
+        totalPrice: cartData.totalPrice || 0,
         isGuest: false,
         loading: false,
       });
@@ -59,14 +60,12 @@ export const useCartStore = create((set, get) => ({
     }
   },
 
-  // Agregar producto al carrito
   addItem: async (product, quantity = 1) => {
     const { isGuest, items } = get();
 
     if (isGuest) {
-      // Carrito de invitado (localStorage)
       const existingItem = items.find(item => item.perfume._id === product._id);
-      
+
       let updatedItems;
       if (existingItem) {
         updatedItems = items.map(item =>
@@ -81,15 +80,10 @@ export const useCartStore = create((set, get) => ({
       const newTotalItems = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
       const newTotalPrice = updatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-      set({
-        items: updatedItems,
-        totalItems: newTotalItems,
-        totalPrice: newTotalPrice,
-      });
-
+      set({ items: updatedItems, totalItems: newTotalItems, totalPrice: newTotalPrice });
       get().saveGuestCart();
     } else {
-      // Usuario autenticado (backend)
+      // POST /cart/add espera: { perfumeId, quantity }
       try {
         await cartService.addToCart(product._id, quantity);
         await get().fetchCartFromBackend();
@@ -99,30 +93,18 @@ export const useCartStore = create((set, get) => ({
     }
   },
 
-  // Actualizar cantidad de un producto
   updateItemQuantity: async (perfumeId, quantity) => {
     const { isGuest, items } = get();
 
-    if (quantity <= 0) {
-      return get().removeItem(perfumeId);
-    }
+    if (quantity <= 0) return get().removeItem(perfumeId);
 
     if (isGuest) {
       const updatedItems = items.map(item =>
-        item.perfume._id === perfumeId
-          ? { ...item, quantity }
-          : item
+        item.perfume._id === perfumeId ? { ...item, quantity } : item
       );
-
       const newTotalItems = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
       const newTotalPrice = updatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-      set({
-        items: updatedItems,
-        totalItems: newTotalItems,
-        totalPrice: newTotalPrice,
-      });
-
+      set({ items: updatedItems, totalItems: newTotalItems, totalPrice: newTotalPrice });
       get().saveGuestCart();
     } else {
       try {
@@ -134,7 +116,6 @@ export const useCartStore = create((set, get) => ({
     }
   },
 
-  // Eliminar producto del carrito
   removeItem: async (perfumeId) => {
     const { isGuest, items } = get();
 
@@ -142,13 +123,7 @@ export const useCartStore = create((set, get) => ({
       const updatedItems = items.filter(item => item.perfume._id !== perfumeId);
       const newTotalItems = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
       const newTotalPrice = updatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-      set({
-        items: updatedItems,
-        totalItems: newTotalItems,
-        totalPrice: newTotalPrice,
-      });
-
+      set({ items: updatedItems, totalItems: newTotalItems, totalPrice: newTotalPrice });
       get().saveGuestCart();
     } else {
       try {
@@ -160,7 +135,6 @@ export const useCartStore = create((set, get) => ({
     }
   },
 
-  // Vaciar carrito
   clearCart: async () => {
     const { isGuest } = get();
 
@@ -177,23 +151,30 @@ export const useCartStore = create((set, get) => ({
     }
   },
 
-  // Migrar carrito de invitado a usuario autenticado
+  // Migrar carrito invitado → backend tras login
   migrateGuestCart: async () => {
-    const { items, isGuest } = get();
+    const { items } = get();
+    const guestItems = [...items]; // copia antes de limpiar estado
 
-    if (!isGuest || items.length === 0) return;
+    // Marcar autenticado antes de cualquier llamada al backend
+    set({ isGuest: false });
+
+    if (guestItems.length === 0) {
+      await get().fetchCartFromBackend();
+      return;
+    }
 
     try {
-      // Agregar cada item del carrito de invitado al backend
-      for (const item of items) {
+      for (const item of guestItems) {
         await cartService.addToCart(item.perfume._id, item.quantity);
       }
-
-      // Limpiar localStorage y cargar desde backend
       localStorage.removeItem(STORAGE_KEYS.GUEST_CART);
       await get().fetchCartFromBackend();
     } catch (error) {
       console.error('Error al migrar carrito:', error);
+      // Aunque falle la migración, cargar lo que haya en el backend
+      localStorage.removeItem(STORAGE_KEYS.GUEST_CART);
+      await get().fetchCartFromBackend();
     }
   },
 }));

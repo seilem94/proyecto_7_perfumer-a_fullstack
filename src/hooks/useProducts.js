@@ -1,28 +1,28 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { productService } from '../api/productService';
 
 export const useProducts = () => {
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState(null);
+  const [filters, setFilters]   = useState({
     category: '',
     minPrice: '',
     maxPrice: '',
-    search: '',
+    search:   '',
   });
 
   const fetchProducts = useCallback(async (currentFilters) => {
-    console.log('🔍 Fetching with:', currentFilters);
     setLoading(true);
     setError(null);
-
     try {
       const response = await productService.getAllProducts(currentFilters);
-      console.log('✅ API response:', response);
-      setProducts(response.data.perfumes || response.data || []);
+      // Backend devuelve: { success, data: { perfumes: [...] } }
+      const data = response.data?.data;
+      const perfumes = data?.perfumes ?? data ?? [];
+      setProducts(Array.isArray(perfumes) ? perfumes : []);
     } catch (err) {
-      console.error('❌ API error:', err);
+      console.error('❌ Error al cargar productos:', err);
       setError(err.message);
       setProducts([]);
     } finally {
@@ -30,13 +30,12 @@ export const useProducts = () => {
     }
   }, []);
 
-  // Solo fetch cuando cambian filtros "importantes"
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchProducts(filters);
-    }, 300); // Debounce 300ms
-
+    }, 300);
     return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.category, filters.minPrice, filters.maxPrice, filters.search, fetchProducts]);
 
   const updateFilters = useCallback((newFilters) => {
@@ -44,20 +43,8 @@ export const useProducts = () => {
   }, []);
 
   const resetFilters = useCallback(() => {
-    setFilters({
-      category: '',
-      minPrice: '',
-      maxPrice: '',
-      search: '',
-    });
+    setFilters({ category: '', minPrice: '', maxPrice: '', search: '' });
   }, []);
 
-  return {
-    products,
-    loading,
-    error,
-    filters,
-    updateFilters,
-    resetFilters,
-  };
+  return { products, loading, error, filters, updateFilters, resetFilters };
 };

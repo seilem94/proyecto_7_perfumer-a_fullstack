@@ -1,29 +1,45 @@
-export const Input = ({ 
-  label, 
-  error, 
+import { forwardRef } from 'react';
+
+export const Input = forwardRef(({
+  label,
+  error,
   type = 'text',
   className = '',
-  ...props 
-}) => {
+  ...props
+}, ref) => {
   return (
-    <div className="w-full">
+    <div className="flex flex-col gap-1.5">
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label style={{
+          fontFamily: 'var(--font-body)',
+          fontSize: '0.6rem',
+          fontWeight: 500,
+          letterSpacing: '0.18em',
+          textTransform: 'uppercase',
+          color: error ? '#8B4545' : 'var(--gold)',
+        }}>
           {label}
         </label>
       )}
       <input
+        ref={ref}
         type={type}
-        className={`w-full px-4 py-2 border rounded-lg outline-none transition-all
-          ${error 
-            ? 'border-red-500 focus:ring-2 focus:ring-red-500' 
-            : 'border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent'
-          } ${className}`}
+        className={`input-luxury ${className}`}
+        style={error ? { borderColor: '#8B4545' } : {}}
         {...props}
       />
       {error && (
-        <p className="text-red-500 text-sm mt-1">{error}</p>
+        <p style={{
+          fontFamily: 'var(--font-body)',
+          fontSize: '0.72rem',
+          color: '#8B4545',
+          letterSpacing: '0.04em',
+        }}>
+          {error}
+        </p>
       )}
     </div>
   );
-};
+});
+
+Input.displayName = 'Input';

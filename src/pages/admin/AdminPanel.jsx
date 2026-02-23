@@ -1,436 +1,139 @@
-import { useEffect, useState, useCallback } from "react";
-import { productService } from "../../api/productService";
-import { formatPrice } from "../../utils/formatters";
-import { CATEGORIES } from "../../utils/constants";
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { productService } from '../../api/productService';
+import { formatPrice } from '../../utils/formatters';
+import { useAuth } from '../../context/authContext';
 
-// ── Formulario de producto (crear / editar) ──────────────────────────────────
-const EMPTY_FORM = {
-  name: "",
-  brand: "",
-  description: "",
-  price: "",
-  stock: "",
-  category: "",
-  image: "",
-};
-
-function ProductForm({ initial = EMPTY_FORM, onSubmit, onCancel, loading }) {
-  const [form, setForm] = useState(initial);
-  const [errors, setErrors] = useState({});
-
-  const set = (field) => (e) =>
-    setForm((prev) => ({ ...prev, [field]: e.target.value }));
-
-  const validate = () => {
-    const errs = {};
-    if (!form.name.trim()) errs.name = "Nombre requerido";
-    if (!form.brand.trim()) errs.brand = "Marca requerida";
-    if (!form.price || Number(form.price) <= 0) errs.price = "Precio inválido";
-    if (form.stock === "" || Number(form.stock) < 0) errs.stock = "Stock inválido";
-    if (!form.category) errs.category = "Categoría requerida";
-    return errs;
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const errs = validate();
-    if (Object.keys(errs).length > 0) return setErrors(errs);
-    onSubmit({
-      ...form,
-      price: Number(form.price),
-      stock: Number(form.stock),
-    });
-  };
-
-  const field = (label, key, type = "text", extra = {}) => (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-      <input
-        type={type}
-        value={form[key]}
-        onChange={set(key)}
-        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 ${
-          errors[key] ? "border-red-400" : "border-gray-300"
-        }`}
-        {...extra}
-      />
-      {errors[key] && <p className="text-xs text-red-500 mt-1">{errors[key]}</p>}
+const StatCard = ({ label, value, sub, icon }) => (
+  <div style={{ backgroundColor: 'var(--white)', border: '1px solid rgba(212,184,150,0.22)', boxShadow: 'var(--shadow-soft)', padding: '1.75rem' }}>
+    <div className="flex items-start justify-between mb-3">
+      <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.6rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--stone)' }}>{label}</p>
+      <span style={{ color: 'var(--champagne)' }}>{icon}</span>
     </div>
-  );
+    <p style={{ fontFamily: 'var(--font-display)', fontSize: '2.25rem', fontWeight: 300, color: 'var(--espresso)', lineHeight: 1, marginBottom: '0.4rem' }}>{value}</p>
+    {sub && <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', color: 'var(--stone-light)' }}>{sub}</p>}
+  </div>
+);
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {field("Nombre *", "name", "text", { placeholder: "Chanel Nº5" })}
-        {field("Marca *", "brand", "text", { placeholder: "Chanel" })}
-        {field("Precio (CLP) *", "price", "number", { min: 0, placeholder: "50000" })}
-        {field("Stock *", "stock", "number", { min: 0, placeholder: "10" })}
+const QuickLink = ({ to, label, desc, icon }) => (
+  <Link to={to} style={{ display: 'block', textDecoration: 'none', padding: '1.5rem', backgroundColor: 'var(--white)', border: '1px solid rgba(212,184,150,0.22)', boxShadow: 'var(--shadow-soft)', transition: 'all 0.35s' }}
+    onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(184,151,90,0.4)'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-medium)'; }}
+    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(212,184,150,0.22)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow-soft)'; }}
+  >
+    <div className="flex items-center gap-4">
+      <div style={{ width: '44px', height: '44px', border: '1px solid rgba(184,151,90,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold)', flexShrink: 0 }}>
+        {icon}
       </div>
-
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Categoría *
-        </label>
-        <select
-          value={form.category}
-          onChange={set("category")}
-          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 ${
-            errors.category ? "border-red-400" : "border-gray-300"
-          }`}
-        >
-          <option value="">Seleccionar...</option>
-          {CATEGORIES.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-        {errors.category && (
-          <p className="text-xs text-red-500 mt-1">{errors.category}</p>
-        )}
+        <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 400, color: 'var(--espresso)', marginBottom: '0.2rem' }}>{label}</p>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.75rem', fontWeight: 300, color: 'var(--stone)' }}>{desc}</p>
       </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Descripción
-        </label>
-        <textarea
-          value={form.description}
-          onChange={set("description")}
-          rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 resize-none"
-          placeholder="Descripción del perfume..."
-        />
-      </div>
-
-      {field("URL de imagen", "image", "url", {
-        placeholder: "https://...",
-      })}
-
-      <div className="flex gap-3 pt-2">
-        <button
-          type="submit"
-          disabled={loading}
-          className="flex-1 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium disabled:opacity-50"
-        >
-          {loading ? "Guardando..." : initial === EMPTY_FORM ? "Crear producto" : "Guardar cambios"}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium"
-        >
-          Cancelar
-        </button>
-      </div>
-    </form>
-  );
-}
-
-// ── Modal genérico ────────────────────────────────────────────────────────────
-function Modal({ title, children, onClose }) {
-  return (
-    <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-bold text-gray-900">{title}</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
-          >
-            ×
-          </button>
-        </div>
-        <div className="p-6">{children}</div>
-      </div>
+      <svg className="ml-auto" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--stone-light)', flexShrink: 0 }}>
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
     </div>
-  );
-}
+  </Link>
+);
 
-// ── Panel Admin principal ─────────────────────────────────────────────────────
 export default function AdminPanel() {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [formLoading, setFormLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-
-  // Modal state: null | 'create' | { mode: 'edit', product }
-  const [modal, setModal] = useState(null);
-
-  // Confirmación de borrado
-  const [deleteTarget, setDeleteTarget] = useState(null);
-
-  // Búsqueda local
-  const [search, setSearch] = useState("");
-
-  const notify = (msg) => {
-    setSuccess(msg);
-    setTimeout(() => setSuccess(null), 3000);
-  };
-
-  const fetchProducts = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await productService.getAllProducts();
-      setProducts(res.data.perfumes || res.data || []);
-    } catch (err) {
-      setError("No se pudieron cargar los productos.");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { user } = useAuth();
+  const [stats, setStats] = useState(null);
+  const [recentProducts, setRecentProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+    const fetchData = async () => {
+      try {
+        const res = await productService.getAllProducts();
+        const products = res.data?.perfumes || res.data || [];
+        const totalValue = products.reduce((sum, p) => sum + p.price * p.stock, 0);
+        setStats({
+          total: products.length,
+          inStock: products.filter(p => p.stock > 0).length,
+          lowStock: products.filter(p => p.stock > 0 && p.stock <= 10).length,
+          outOfStock: products.filter(p => p.stock === 0).length,
+          totalValue,
+        });
+        setRecentProducts(products.slice(0, 5));
+      } catch { setStats(null); }
+      finally { setLoading(false); }
+    };
+    fetchData();
+  }, []);
 
-  // ── CRUD handlers ───────────────────────────────────────────────────────────
-  const handleCreate = async (data) => {
-    setFormLoading(true);
-    try {
-      await productService.createProduct(data);
-      notify("✅ Producto creado correctamente");
-      setModal(null);
-      fetchProducts();
-    } catch (err) {
-      setError(err.response?.data?.message || "Error al crear el producto");
-    } finally {
-      setFormLoading(false);
-    }
-  };
-
-  const handleUpdate = async (data) => {
-    setFormLoading(true);
-    try {
-      await productService.updateProduct(modal.product._id, data);
-      notify("✅ Producto actualizado correctamente");
-      setModal(null);
-      fetchProducts();
-    } catch (err) {
-      setError(err.response?.data?.message || "Error al actualizar el producto");
-    } finally {
-      setFormLoading(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      await productService.deleteProduct(deleteTarget._id);
-      notify("🗑️ Producto eliminado");
-      setDeleteTarget(null);
-      fetchProducts();
-    } catch (err) {
-      setError(err.response?.data?.message || "Error al eliminar el producto");
-      setDeleteTarget(null);
-    }
-  };
-
-  // ── Filtro local ────────────────────────────────────────────────────────────
-  const filtered = products.filter(
-    (p) =>
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.brand.toLowerCase().includes(search.toLowerCase())
-  );
-
-  // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+    <div className="animate-fade-up">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Panel Admin</h1>
-          <p className="text-gray-500 mt-1">
-            {products.length} productos en total
-          </p>
-        </div>
-        <button
-          onClick={() => setModal("create")}
-          className="px-5 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition-colors"
-        >
-          + Nuevo producto
-        </button>
+      <div className="mb-12">
+        <span className="text-label block mb-2">Panel de control</span>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2rem,4vw,3rem)', fontWeight: 300, color: 'var(--espresso)' }}>
+          Bienvenido, {user?.name?.split(' ')[0]}
+        </h1>
+        <div className="gold-line mt-3" />
       </div>
 
-      {/* Notificaciones */}
-      {success && (
-        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg px-4 py-3 text-sm">
-          {success}
-        </div>
-      )}
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 text-sm flex justify-between">
-          {error}
-          <button onClick={() => setError(null)} className="ml-4 font-bold">×</button>
-        </div>
-      )}
-
-      {/* Buscador local */}
-      <input
-        type="text"
-        placeholder="Buscar por nombre o marca..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="w-full max-w-sm px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-      />
-
-      {/* Tabla */}
+      {/* Stats */}
       {loading ? (
-        <div className="flex justify-center py-20">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600" />
+        <div className="flex justify-center py-16">
+          <div style={{ width: '36px', height: '36px', borderRadius: '50%', border: '1px solid var(--champagne)', borderTopColor: 'var(--gold)', animation: 'spin 1s linear infinite' }} />
+          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
         </div>
-      ) : filtered.length === 0 ? (
-        <p className="text-center text-gray-500 py-12">No se encontraron productos.</p>
       ) : (
-        <div className="bg-white rounded-xl shadow overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  {["Producto", "Marca", "Categoría", "Precio", "Stock", "Acciones"].map(
-                    (h) => (
-                      <th
-                        key={h}
-                        className="text-left px-4 py-3 font-semibold text-gray-700"
-                      >
-                        {h}
-                      </th>
-                    )
-                  )}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filtered.map((product) => (
-                  <tr key={product._id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
-                          <img
-                            src={product.image || "https://via.placeholder.com/40"}
-                            alt={product.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <span className="font-medium text-gray-900 line-clamp-1">
-                          {product.name}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">{product.brand}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          product.category === "Hombre"
-                            ? "bg-blue-100 text-blue-800"
-                            : product.category === "Mujer"
-                            ? "bg-pink-100 text-pink-800"
-                            : "bg-indigo-100 text-indigo-800"
-                        }`}
-                      >
-                        {product.category}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 font-semibold text-purple-600">
-                      {formatPrice(product.price)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`font-semibold ${
-                          product.stock > 10
-                            ? "text-emerald-600"
-                            : product.stock > 0
-                            ? "text-amber-600"
-                            : "text-red-600"
-                        }`}
-                      >
-                        {product.stock}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setModal({ mode: "edit", product })}
-                          className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 font-medium"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => setDeleteTarget(product)}
-                          className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-medium"
-                        >
-                          Eliminar
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+            <StatCard label="Total productos" value={stats?.total ?? '—'} sub="En el catálogo"
+              icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>} />
+            <StatCard label="En stock" value={stats?.inStock ?? '—'} sub="Disponibles para venta"
+              icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>} />
+            <StatCard label="Stock bajo" value={stats?.lowStock ?? '—'} sub="Menos de 10 unidades"
+              icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>} />
+            <StatCard label="Valor inventario" value={stats ? formatPrice(stats.totalValue) : '—'} sub="Precio × stock total"
+              icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>} />
           </div>
-        </div>
-      )}
 
-      {/* Modal Crear */}
-      {modal === "create" && (
-        <Modal title="Nuevo producto" onClose={() => setModal(null)}>
-          <ProductForm
-            onSubmit={handleCreate}
-            onCancel={() => setModal(null)}
-            loading={formLoading}
-          />
-        </Modal>
-      )}
-
-      {/* Modal Editar */}
-      {modal?.mode === "edit" && (
-        <Modal title="Editar producto" onClose={() => setModal(null)}>
-          <ProductForm
-            initial={{
-              name: modal.product.name || "",
-              brand: modal.product.brand || "",
-              description: modal.product.description || "",
-              price: modal.product.price || "",
-              stock: modal.product.stock || "",
-              category: modal.product.category || "",
-              image: modal.product.image || "",
-            }}
-            onSubmit={handleUpdate}
-            onCancel={() => setModal(null)}
-            loading={formLoading}
-          />
-        </Modal>
-      )}
-
-      {/* Modal Confirmar Borrado */}
-      {deleteTarget && (
-        <Modal title="Confirmar eliminación" onClose={() => setDeleteTarget(null)}>
-          <div className="text-center space-y-4">
-            <span className="text-5xl block">🗑️</span>
-            <p className="text-gray-700">
-              ¿Estás seguro de que quieres eliminar{" "}
-              <strong>{deleteTarget.name}</strong>? Esta acción no se puede deshacer.
-            </p>
-            <div className="flex gap-3 justify-center pt-2">
-              <button
-                onClick={handleDelete}
-                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium"
-              >
-                Sí, eliminar
-              </button>
-              <button
-                onClick={() => setDeleteTarget(null)}
-                className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium"
-              >
-                Cancelar
-              </button>
+          {/* Accesos rápidos */}
+          <div className="mb-10">
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 400, color: 'var(--espresso)', marginBottom: '1rem' }}>Acciones rápidas</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <QuickLink to="/admin/productos/crear" label="Agregar perfume" desc="Crear un nuevo producto en el catálogo"
+                icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>} />
+              <QuickLink to="/admin/productos" label="Ver catálogo" desc="Gestionar todos los perfumes existentes"
+                icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>} />
             </div>
           </div>
-        </Modal>
+
+          {/* Productos recientes */}
+          {recentProducts.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-5">
+                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 400, color: 'var(--espresso)' }}>Productos recientes</h2>
+                <Link to="/admin/productos" style={{ fontFamily: 'var(--font-body)', fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--gold)', textDecoration: 'underline', textDecorationColor: 'var(--champagne)' }}>
+                  Ver todos →
+                </Link>
+              </div>
+              <div style={{ backgroundColor: 'var(--white)', border: '1px solid rgba(212,184,150,0.22)', boxShadow: 'var(--shadow-soft)' }}>
+                {recentProducts.map((p, i) => (
+                  <div key={p._id} className="flex items-center gap-4 px-5 py-4" style={{ borderBottom: i < recentProducts.length - 1 ? '1px solid rgba(212,184,150,0.15)' : 'none', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(247,243,238,0.5)'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                    <div style={{ width: '44px', height: '44px', overflow: 'hidden', backgroundColor: 'var(--cream-dark)', flexShrink: 0 }}>
+                      <img src={p.image || 'https://images.unsplash.com/photo-1541643600914-78b084683702?w=88&h=88&fit=crop'} alt={p.name} className="w-full h-full object-cover" onError={e => { e.target.src = 'https://images.unsplash.com/photo-1541643600914-78b084683702?w=88&h=88&fit=crop'; }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p style={{ fontFamily: 'var(--font-display)', fontSize: '0.95rem', fontWeight: 400, color: 'var(--espresso)', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</p>
+                      <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.68rem', color: 'var(--stone)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{p.brand}</p>
+                    </div>
+                    <div className="text-right hidden sm:block">
+                      <p style={{ fontFamily: 'var(--font-display)', fontSize: '0.95rem', color: 'var(--gold)' }}>{formatPrice(p.price)}</p>
+                      <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.68rem', color: p.stock === 0 ? '#8B4545' : p.stock <= 10 ? 'var(--gold-dark)' : '#6B8F6B' }}>{p.stock} en stock</p>
+                    </div>
+                    <Link to={`/admin/productos/editar/${p._id}`} style={{ fontFamily: 'var(--font-body)', fontSize: '0.62rem', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '0.35rem 0.75rem', border: '1px solid rgba(184,151,90,0.3)', color: 'var(--gold)', textDecoration: 'none', flexShrink: 0, transition: 'all 0.3s' }} onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--gold)'; e.currentTarget.style.color = 'white'; }} onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--gold)'; }}>
+                      Editar
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
